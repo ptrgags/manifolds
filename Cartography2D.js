@@ -3,7 +3,7 @@ function Cartography2D(p5) {
   
   p5.setup = () => {
     p5.createCanvas(1000, 500, p5.WEBGL);
-    basic_uv = p5.createShader(vert_2d, frag_atlas(stereographic));
+    basic_uv = p5.createShader(vert_2d, frag_atlas(gnomonic));
   };
   
   p5.draw = () => {

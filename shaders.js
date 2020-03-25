@@ -140,6 +140,42 @@ vec3 inv_projection(vec3 local_coords) {
 }
 `;
 
+const gnomonic = `
+vec3 layout_charts(vec2 uv) {
+  vec2 scaled = uv * vec2(4.0, 2.0);
+  vec2 chart_uv = fract(scaled);
+  vec2 chart_id = floor(scaled);
+  float id = 4.0 * chart_id.y + chart_id.x;
+  return vec3(2.0 * chart_uv - 1.0, id);
+}
+
+vec3 inv_projection(vec3 local_coords) {
+  vec3 right = vec3(1.0, local_coords.x, local_coords.y);
+  vec3 left = vec3(-1.0, -local_coords.x, local_coords.y);
+  vec3 front = vec3(local_coords.x, -1.0, local_coords.y);
+  vec3 back = vec3(-local_coords.x, 1.0, local_coords.y);
+  vec3 up = vec3(local_coords.x, local_coords.y, 1.0);
+  vec3 down = vec3(-local_coords.x, local_coords.y, -1.0);
+  
+  float id = local_coords.z;
+  vec3 plane_pos = mix(right, up, float(id > 0.0));
+  plane_pos = mix(plane_pos, front, float(id > 1.0));
+  plane_pos = mix(plane_pos, left, float(id > 3.0));
+  plane_pos = mix(plane_pos, down, float(id > 4.0));
+  plane_pos = mix(plane_pos, back, float(id > 5.0));
+  
+  float s_sqr = dot(plane_pos, plane_pos);
+  float t = 1.0 / sqrt(1.0 + s_sqr);
+  
+  vec3 pos = plane_pos * t;
+  vec3 center = vec3(0.0);
+  pos = mix(pos, center, float(id > 2.0 && id < 4.0));
+  pos = mix(pos, center, float(id > 6.0));
+  
+  return pos;
+}
+`;
+
 const frag_atlas = (projection) => `
 ${preamble}
 
@@ -162,7 +198,7 @@ void main() {
   vec3 local_coords = layout_charts(uv);
   vec3 cartesian = inv_projection(local_coords);
   vec2 carto = cartesian2carto(cartesian);
-  vec3 c = pattern(carto); 
+  vec3 c = pattern(carto);
   //vec2 crosshairs = crosshairs(carto, vec2(0.0, 0.0));
   //float null_island = max(crosshairs.x, crosshairs.y);
   gl_FragColor = vec4(c, 1.0);
