@@ -30,6 +30,7 @@ void main() {
 
 const preamble = `
 #define PI 3.141592
+#define HALF_PI (PI / 2.0)
 precision highp float;
 
 uniform float time;
@@ -176,6 +177,79 @@ vec3 inv_projection(vec3 local_coords) {
   pos = mix(pos, center, float(id > 6.0));
   
   return pos;
+}
+`;
+
+const octahedral = `
+vec3 layout_charts(vec2 uv) {
+  vec2 scaled = uv * vec2(4.0, 2.0);
+  vec2 chart_uv = fract(scaled);
+  vec2 chart_id = floor(scaled);
+  float id = 4.0 * chart_id.y + chart_id.x;
+  return vec3(2.0 * chart_uv - 1.0, id);
+}
+
+mat3 rotate_z(float theta) {
+  float ct = cos(theta);
+  float st = sin(theta);
+  return mat3(
+    ct, st, 0,
+    -st, ct, 0,
+    0, 0, 1
+  );
+}
+
+vec3 select_a(vec3 local_coords) {
+  float id = local_coords.z;
+  float column = mod(id, 4.0);
+  float theta_top_row = column * PI / 2.0;
+  float theta_bottom_row = column * PI / 2.0 + PI / 2.0;
+  float theta = mix(theta_bottom_row, theta_top_row, float(id >= 4.0));
+  
+  return rotate_z(theta) * vec3(1.0, 0.0, 0.0);
+}
+
+vec3 select_b(vec3 local_coords) {
+  float id = local_coords.z;
+  float column = mod(id, 4.0);
+  float theta_top_row = column * PI / 2.0;
+  float theta_bottom_row = column * PI / 2.0 - PI / 2.0;
+  float theta = mix(theta_bottom_row, theta_top_row, float(id >= 4.0));
+  
+  return rotate_z(theta) * vec3(0.0, 1.0, 0.0);
+}
+
+vec3 select_c(vec3 local_coords) {
+  float id = local_coords.z;
+  float sign = mix(-1.0, 1.0, float(id >= 4.0));
+  
+  return sign * vec3(0.0, 0.0, 1.0);
+}
+
+vec3 inv_projection(vec3 local_coords) {
+  // Triangle that makes up a face of the octahedron
+  vec3 a = select_a(local_coords);
+  vec3 b = select_b(local_coords);
+  vec3 c = select_c(local_coords);
+  
+  // Parameterize the plane of this triangle
+  // so the origin is at the centroid of the triangle.
+  vec3 origin = (a + b + c) / 3.0;
+  vec3 normal = normalize(origin);
+  
+  // We also need a basis for the plane.
+  // Note that the bottom row is rotated 180 degrees
+  // for a nicer layout
+  float id = local_coords.z;
+  float sign = mix(-1.0, 1.0, float(id >= 4.0)); 
+  vec3 right = sign * normalize(b - a);
+  vec3 up = sign * normalize(c - origin);
+  
+  vec3 plane_world = origin + local_coords.x * right + local_coords.y * up;
+  float t = 1.0 / length(plane_world);
+  
+  vec3 sphere_pos = t * plane_world;
+  return sphere_pos;
 }
 `;
 

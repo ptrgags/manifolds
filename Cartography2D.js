@@ -2,9 +2,10 @@ function Cartography2D(p5) {
   let basic_uv;
   let projections = [
     stereographic,
-    gnomonic
+    gnomonic,
+    octahedral
   ];
-  let projection_index = 0;
+  let projection_index = 2;
   
   function set_projection() {
     const projection = projections[projection_index];
