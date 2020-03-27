@@ -5,7 +5,7 @@ function Cartography2D(p5) {
     gnomonic,
     octahedral
   ];
-  let projection_index = 2;
+  let projection_index = 0;
   
   function set_projection() {
     const projection = projections[projection_index];

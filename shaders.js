@@ -58,12 +58,31 @@ vec4 xyz_dots(vec2 carto) {
   return vec4(x_cap, y_cap, z_cap, alpha);
 }
 
+float near(float x, float center, float threshold) {
+  return 1.0 - step(threshold, abs(x - center));
+}
+
+float great_circles(vec2 carto) {
+  float equator = near(carto.y, 0.0, 0.5);
+  float meridian_thickness = 0.8;
+  float prime_meridian = near(carto.x, 0.0, meridian_thickness);
+  float lon_90 = near(carto.x, 90.0, meridian_thickness);
+  float lon_neg90 = near(carto.x, -90.0, meridian_thickness);
+  
+  // Need both since this is on the boundary of the canvas.
+  float lon_180 = near(carto.x, 180.0, meridian_thickness);
+  float lon_neg180 = near(carto.x, -180.0, meridian_thickness);
+  
+  float result = max(equator, prime_meridian);
+  result = max(result, lon_90);
+  result = max(result, lon_neg90);
+  result = max(result, lon_180);
+  result = max(result, lon_neg180);
+  return result;
+}
+
 vec4 pattern(vec2 carto) {
-  float equator = 1.0 - step(0.5, abs(carto.y));
-  float prime_meridian = 1.0 - step(0.8, abs(carto.x)); 
-  float x = step(0.9, sin(carto.x));
-  float y = step(0.9, cos(carto.y));
-  float grid = max(equator, prime_meridian);
+  float grid = great_circles(carto);
   float wave1 = sin(0.4 * length(carto) + 0.09 * time);
   
   float lon = mod(0.5 * time, 360.0) - 180.0;
