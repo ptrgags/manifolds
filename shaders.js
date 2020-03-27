@@ -221,8 +221,8 @@ mat3 rotate_z(float theta) {
 vec3 select_a(vec3 local_coords) {
   float id = local_coords.z;
   float column = mod(id, 4.0);
-  float theta_top_row = column * PI / 2.0;
-  float theta_bottom_row = column * PI / 2.0 + PI / 2.0;
+  float theta_top_row = column * HALF_PI;
+  float theta_bottom_row = column * HALF_PI + HALF_PI;
   float theta = mix(theta_bottom_row, theta_top_row, float(id >= 4.0));
   
   return rotate_z(theta) * vec3(1.0, 0.0, 0.0);
@@ -231,8 +231,8 @@ vec3 select_a(vec3 local_coords) {
 vec3 select_b(vec3 local_coords) {
   float id = local_coords.z;
   float column = mod(id, 4.0);
-  float theta_top_row = column * PI / 2.0;
-  float theta_bottom_row = column * PI / 2.0 - PI / 2.0;
+  float theta_top_row = column * HALF_PI;
+  float theta_bottom_row = column * HALF_PI - HALF_PI;
   float theta = mix(theta_bottom_row, theta_top_row, float(id >= 4.0));
   
   return rotate_z(theta) * vec3(0.0, 1.0, 0.0);
